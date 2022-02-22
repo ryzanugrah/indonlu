@@ -503,12 +503,12 @@ class EntailmentDataLoader(DataLoader):
 #####
 class DocumentSentimentDataset(Dataset):
     # Static constant variable
-    LABEL2INDEX = {'positive': 0, 'neutral': 1, 'negative': 2}
-    INDEX2LABEL = {0: 'positive', 1: 'neutral', 2: 'negative'}
-    NUM_LABELS = 3
+    LABEL2INDEX = {'Non_HS': 0, 'HS': 1}
+    INDEX2LABEL = {0: 'Non_HS', 1: 'HS'}
+    NUM_LABELS = 2
     
     def load_dataset(self, path): 
-        df = pd.read_csv(path, sep='\t', header=None)
+        df = pd.read_csv(path)
         df.columns = ['text','sentiment']
         df['sentiment'] = df['sentiment'].apply(lambda lab: self.LABEL2INDEX[lab])
         return df
@@ -771,11 +771,11 @@ class AspectBasedSentimentAnalysisAiryDataset(Dataset):
     
 class AspectBasedSentimentAnalysisProsaDataset(Dataset):
     # Static constant variable
-    ASPECT_DOMAIN = ['fuel', 'machine', 'others', 'part', 'price', 'service']
-    LABEL2INDEX = {'negative': 0, 'neutral': 1, 'positive': 2}
-    INDEX2LABEL = {0: 'negative', 1: 'neutral', 2: 'positive'}
-    NUM_LABELS = [3, 3, 3, 3, 3, 3]
-    NUM_ASPECTS = 6
+    ASPECT_DOMAIN = ['HS', 'Abusive', 'HS_Individual', 'HS_Group', 'HS_Religion', 'HS_Race', 'HS_Physical', 'HS_Gender', 'HS_Other', 'HS_Weak', 'HS_Moderate', 'HS_Strong']
+    LABEL2INDEX = {'Non_HS': 0, 'HS': 1}
+    INDEX2LABEL = {0: 'Non_HS', 1: 'HS'}
+    NUM_LABELS = [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
+    NUM_ASPECTS = 12
     
     def load_dataset(self, path):
         df = pd.read_csv(path)
@@ -790,9 +790,9 @@ class AspectBasedSentimentAnalysisProsaDataset(Dataset):
         
     def __getitem__(self, index):
         data = self.data.loc[index,:]
-        sentence, labels = data['sentence'], [data[aspect] for aspect in self.ASPECT_DOMAIN]
+        sentence, labels = data['text'], [data[aspect] for aspect in self.ASPECT_DOMAIN]
         subwords = self.tokenizer.encode(sentence, add_special_tokens=not self.no_special_token)
-        return np.array(subwords), np.array(labels), data['sentence']
+        return np.array(subwords), np.array(labels), data['text']
     
     def __len__(self):
         return len(self.data)
