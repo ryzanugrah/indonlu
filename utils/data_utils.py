@@ -503,13 +503,13 @@ class EntailmentDataLoader(DataLoader):
 #####
 class DocumentSentimentDataset(Dataset):
     # Static constant variable
-    LABEL2INDEX = {'Non_HS': 0, 'HS': 1}
-    INDEX2LABEL = {0: 'Non_HS', 1: 'HS'}
-    NUM_LABELS = 2
+#     LABEL2INDEX = {'Non_HS': 0, 'HS': 1}
+#     INDEX2LABEL = {0: 'Non_HS', 1: 'HS'}
+#     NUM_LABELS = 2
     
-    # LABEL2INDEX = {'Non_HS': 0, 'HS_Weak': 1, 'HS_Moderate': 2, 'HS_Strong': 3,}
-    # INDEX2LABEL = {0: 'Non_HS', 1: 'HS_Weak', 2: 'HS_Moderate', 3: 'HS_Strong'}
-    # NUM_LABELS = 4
+    LABEL2INDEX = {'Non_HS': 0, 'HS_Weak': 1, 'HS_Moderate': 2, 'HS_Strong': 3,}
+    INDEX2LABEL = {0: 'Non_HS', 1: 'HS_Weak', 2: 'HS_Moderate', 3: 'HS_Strong'}
+    NUM_LABELS = 4
     
     def load_dataset(self, path): 
         df = pd.read_csv(path)
