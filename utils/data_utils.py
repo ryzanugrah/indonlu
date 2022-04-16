@@ -897,8 +897,8 @@ class HateSpeechClassificationDataset(Dataset):
     
     def load_dataset(self, path): 
         df = pd.read_csv(path)
-        df.columns = ['text','sentiment']
-        df['sentiment'] = df['sentiment'].apply(lambda lab: self.LABEL2INDEX[lab])
+        df.columns = ['text','label']
+        df['label'] = df['label'].apply(lambda lab: self.LABEL2INDEX[lab])
         return df
     
     def __init__(self, dataset_path, tokenizer, no_special_token=False, *args, **kwargs):
@@ -908,9 +908,9 @@ class HateSpeechClassificationDataset(Dataset):
     
     def __getitem__(self, index):
         data = self.data.loc[index,:]
-        text, sentiment = data['text'], data['sentiment']
+        text, label = data['text'], data['label']
         subwords = self.tokenizer.encode(text, add_special_tokens=not self.no_special_token)
-        return np.array(subwords), np.array(sentiment), data['text']
+        return np.array(subwords), np.array(label), data['text']
     
     def __len__(self):
         return len(self.data)
@@ -923,8 +923,8 @@ class MultiLabelHateSpeechClassificationDataset(Dataset):
     
     def load_dataset(self, path): 
         df = pd.read_csv(path)
-        df.columns = ['text','sentiment']
-        df['sentiment'] = df['sentiment'].apply(lambda lab: self.LABEL2INDEX[lab])
+        df.columns = ['text','label']
+        df['label'] = df['label'].apply(lambda lab: self.LABEL2INDEX[lab])
         return df
     
     def __init__(self, dataset_path, tokenizer, no_special_token=False, *args, **kwargs):
@@ -934,16 +934,16 @@ class MultiLabelHateSpeechClassificationDataset(Dataset):
     
     def __getitem__(self, index):
         data = self.data.loc[index,:]
-        text, sentiment = data['text'], data['sentiment']
+        text, label = data['text'], data['label']
         subwords = self.tokenizer.encode(text, add_special_tokens=not self.no_special_token)
-        return np.array(subwords), np.array(sentiment), data['text']
+        return np.array(subwords), np.array(label), data['text']
     
     def __len__(self):
         return len(self.data)
         
 class HateSpeechClassificationDataLoader(DataLoader):
     def __init__(self, max_seq_len=512, *args, **kwargs):
-        super(DocumentSentimentDataLoader, self).__init__(*args, **kwargs)
+        super(HateSpeechClassificationDataLoader, self).__init__(*args, **kwargs)
         self.collate_fn = self._collate_fn
         self.max_seq_len = max_seq_len
         
@@ -954,15 +954,15 @@ class HateSpeechClassificationDataLoader(DataLoader):
         
         subword_batch = np.zeros((batch_size, max_seq_len), dtype=np.int64)
         mask_batch = np.zeros((batch_size, max_seq_len), dtype=np.float32)
-        sentiment_batch = np.zeros((batch_size, 1), dtype=np.int64)
+        label_batch = np.zeros((batch_size, 1), dtype=np.int64)
         
         seq_list = []
-        for i, (subwords, sentiment, raw_seq) in enumerate(batch):
+        for i, (subwords, label, raw_seq) in enumerate(batch):
             subwords = subwords[:max_seq_len]
             subword_batch[i,:len(subwords)] = subwords
             mask_batch[i,:len(subwords)] = 1
-            sentiment_batch[i,0] = sentiment
+            label_batch[i,0] = label
             
             seq_list.append(raw_seq)
             
-        return subword_batch, mask_batch, sentiment_batch, seq_list
+        return subword_batch, mask_batch, label_batch, seq_list
