@@ -503,12 +503,32 @@ class EntailmentDataLoader(DataLoader):
 #####
 class DocumentSentimentDataset(Dataset):
     # Static constant variable
-    # 2 Labels
-#     LABEL2INDEX = {'Non_HS': 0, 'HS': 1}
-#     INDEX2LABEL = {0: 'Non_HS', 1: 'HS'}
-#     NUM_LABELS = 2
+    LABEL2INDEX = {'Non_HS': 0, 'HS': 1}
+    INDEX2LABEL = {0: 'Non_HS', 1: 'HS'}
+    NUM_LABELS = 2
     
-    # 4 Labels
+    def load_dataset(self, path): 
+        df = pd.read_csv(path)
+        df.columns = ['text','sentiment']
+        df['sentiment'] = df['sentiment'].apply(lambda lab: self.LABEL2INDEX[lab])
+        return df
+    
+    def __init__(self, dataset_path, tokenizer, no_special_token=False, *args, **kwargs):
+        self.data = self.load_dataset(dataset_path)
+        self.tokenizer = tokenizer
+        self.no_special_token = no_special_token
+    
+    def __getitem__(self, index):
+        data = self.data.loc[index,:]
+        text, sentiment = data['text'], data['sentiment']
+        subwords = self.tokenizer.encode(text, add_special_tokens=not self.no_special_token)
+        return np.array(subwords), np.array(sentiment), data['text']
+    
+    def __len__(self):
+        return len(self.data)
+        
+class DocumentSentimentDatasetMultiLabel(Dataset):
+    # Static constant variable   
     LABEL2INDEX = {'Non_HS': 0, 'HS_Weak': 1, 'HS_Moderate': 2, 'HS_Strong': 3,}
     INDEX2LABEL = {0: 'Non_HS', 1: 'HS_Weak', 2: 'HS_Moderate', 3: 'HS_Strong'}
     NUM_LABELS = 4
@@ -531,7 +551,7 @@ class DocumentSentimentDataset(Dataset):
         return np.array(subwords), np.array(sentiment), data['text']
     
     def __len__(self):
-        return len(self.data)    
+        return len(self.data)
         
 class DocumentSentimentDataLoader(DataLoader):
     def __init__(self, max_seq_len=512, *args, **kwargs):
