@@ -503,12 +503,12 @@ class EntailmentDataLoader(DataLoader):
 #####
 class DocumentSentimentDataset(Dataset):
     # Static constant variable
-    LABEL2INDEX = {'Non_HS': 0, 'HS': 1}
-    INDEX2LABEL = {0: 'Non_HS', 1: 'HS'}
-    NUM_LABELS = 2
+    LABEL2INDEX = {'positive': 0, 'neutral': 1, 'negative': 2}
+    INDEX2LABEL = {0: 'positive', 1: 'neutral', 2: 'negative'}
+    NUM_LABELS = 3
     
     def load_dataset(self, path): 
-        df = pd.read_csv(path)
+        df = pd.read_csv(path, sep='\t', header=None)
         df.columns = ['text','sentiment']
         df['sentiment'] = df['sentiment'].apply(lambda lab: self.LABEL2INDEX[lab])
         return df
@@ -525,33 +525,7 @@ class DocumentSentimentDataset(Dataset):
         return np.array(subwords), np.array(sentiment), data['text']
     
     def __len__(self):
-        return len(self.data)
-        
-class DocumentSentimentDatasetMultiLabel(Dataset):
-    # Static constant variable   
-    LABEL2INDEX = {'Non_HS': 0, 'HS_Weak': 1, 'HS_Moderate': 2, 'HS_Strong': 3,}
-    INDEX2LABEL = {0: 'Non_HS', 1: 'HS_Weak', 2: 'HS_Moderate', 3: 'HS_Strong'}
-    NUM_LABELS = 4
-    
-    def load_dataset(self, path): 
-        df = pd.read_csv(path)
-        df.columns = ['text','sentiment']
-        df['sentiment'] = df['sentiment'].apply(lambda lab: self.LABEL2INDEX[lab])
-        return df
-    
-    def __init__(self, dataset_path, tokenizer, no_special_token=False, *args, **kwargs):
-        self.data = self.load_dataset(dataset_path)
-        self.tokenizer = tokenizer
-        self.no_special_token = no_special_token
-    
-    def __getitem__(self, index):
-        data = self.data.loc[index,:]
-        text, sentiment = data['text'], data['sentiment']
-        subwords = self.tokenizer.encode(text, add_special_tokens=not self.no_special_token)
-        return np.array(subwords), np.array(sentiment), data['text']
-    
-    def __len__(self):
-        return len(self.data)
+        return len(self.data)    
         
 class DocumentSentimentDataLoader(DataLoader):
     def __init__(self, max_seq_len=512, *args, **kwargs):
@@ -797,11 +771,11 @@ class AspectBasedSentimentAnalysisAiryDataset(Dataset):
     
 class AspectBasedSentimentAnalysisProsaDataset(Dataset):
     # Static constant variable
-    ASPECT_DOMAIN = ['HS', 'Abusive', 'HS_Individual', 'HS_Group', 'HS_Religion', 'HS_Race', 'HS_Physical', 'HS_Gender', 'HS_Other', 'HS_Weak', 'HS_Moderate', 'HS_Strong']
-    LABEL2INDEX = {'Non_HS': 0, 'HS': 1}
-    INDEX2LABEL = {0: 'Non_HS', 1: 'HS'}
-    NUM_LABELS = [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
-    NUM_ASPECTS = 12
+    ASPECT_DOMAIN = ['fuel', 'machine', 'others', 'part', 'price', 'service']
+    LABEL2INDEX = {'negative': 0, 'neutral': 1, 'positive': 2}
+    INDEX2LABEL = {0: 'negative', 1: 'neutral', 2: 'positive'}
+    NUM_LABELS = [3, 3, 3, 3, 3, 3]
+    NUM_ASPECTS = 6
     
     def load_dataset(self, path):
         df = pd.read_csv(path)
@@ -816,9 +790,9 @@ class AspectBasedSentimentAnalysisProsaDataset(Dataset):
         
     def __getitem__(self, index):
         data = self.data.loc[index,:]
-        sentence, labels = data['text'], [data[aspect] for aspect in self.ASPECT_DOMAIN]
+        sentence, labels = data['sentence'], [data[aspect] for aspect in self.ASPECT_DOMAIN]
         subwords = self.tokenizer.encode(sentence, add_special_tokens=not self.no_special_token)
-        return np.array(subwords), np.array(labels), data['text']
+        return np.array(subwords), np.array(labels), data['sentence']
     
     def __len__(self):
         return len(self.data)
@@ -911,3 +885,84 @@ class NewsCategorizationDataLoader(DataLoader):
             seq_list.append(raw_seq)
             
         return subword_batch, mask_batch, labels_batch, seq_list
+
+#####
+# Hate Speech Classification 
+#####
+class HateSpeechClassificationDataset(Dataset):
+    # Static constant variable
+    LABEL2INDEX = {'Non_HS': 0, 'HS': 1}
+    INDEX2LABEL = {0: 'Non_HS', 1: 'HS'}
+    NUM_LABELS = 2
+    
+    def load_dataset(self, path): 
+        df = pd.read_csv(path)
+        df.columns = ['text','sentiment']
+        df['sentiment'] = df['sentiment'].apply(lambda lab: self.LABEL2INDEX[lab])
+        return df
+    
+    def __init__(self, dataset_path, tokenizer, no_special_token=False, *args, **kwargs):
+        self.data = self.load_dataset(dataset_path)
+        self.tokenizer = tokenizer
+        self.no_special_token = no_special_token
+    
+    def __getitem__(self, index):
+        data = self.data.loc[index,:]
+        text, sentiment = data['text'], data['sentiment']
+        subwords = self.tokenizer.encode(text, add_special_tokens=not self.no_special_token)
+        return np.array(subwords), np.array(sentiment), data['text']
+    
+    def __len__(self):
+        return len(self.data)
+        
+class MultiLabelHateSpeechClassificationDataset(Dataset):
+    # Static constant variable   
+    LABEL2INDEX = {'Non_HS': 0, 'HS_Weak': 1, 'HS_Moderate': 2, 'HS_Strong': 3,}
+    INDEX2LABEL = {0: 'Non_HS', 1: 'HS_Weak', 2: 'HS_Moderate', 3: 'HS_Strong'}
+    NUM_LABELS = 4
+    
+    def load_dataset(self, path): 
+        df = pd.read_csv(path)
+        df.columns = ['text','sentiment']
+        df['sentiment'] = df['sentiment'].apply(lambda lab: self.LABEL2INDEX[lab])
+        return df
+    
+    def __init__(self, dataset_path, tokenizer, no_special_token=False, *args, **kwargs):
+        self.data = self.load_dataset(dataset_path)
+        self.tokenizer = tokenizer
+        self.no_special_token = no_special_token
+    
+    def __getitem__(self, index):
+        data = self.data.loc[index,:]
+        text, sentiment = data['text'], data['sentiment']
+        subwords = self.tokenizer.encode(text, add_special_tokens=not self.no_special_token)
+        return np.array(subwords), np.array(sentiment), data['text']
+    
+    def __len__(self):
+        return len(self.data)
+        
+class HateSpeechClassificationDataLoader(DataLoader):
+    def __init__(self, max_seq_len=512, *args, **kwargs):
+        super(DocumentSentimentDataLoader, self).__init__(*args, **kwargs)
+        self.collate_fn = self._collate_fn
+        self.max_seq_len = max_seq_len
+        
+    def _collate_fn(self, batch):
+        batch_size = len(batch)
+        max_seq_len = max(map(lambda x: len(x[0]), batch))
+        max_seq_len = min(self.max_seq_len, max_seq_len)
+        
+        subword_batch = np.zeros((batch_size, max_seq_len), dtype=np.int64)
+        mask_batch = np.zeros((batch_size, max_seq_len), dtype=np.float32)
+        sentiment_batch = np.zeros((batch_size, 1), dtype=np.int64)
+        
+        seq_list = []
+        for i, (subwords, sentiment, raw_seq) in enumerate(batch):
+            subwords = subwords[:max_seq_len]
+            subword_batch[i,:len(subwords)] = subwords
+            mask_batch[i,:len(subwords)] = 1
+            sentiment_batch[i,0] = sentiment
+            
+            seq_list.append(raw_seq)
+            
+        return subword_batch, mask_batch, sentiment_batch, seq_list
